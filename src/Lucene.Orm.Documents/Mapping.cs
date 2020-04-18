@@ -12,6 +12,7 @@ namespace Lucene.Orm.Documents
     public class Mapping
     {
         internal readonly ConcurrentDictionary<string, Func<object, MemberInfo, Field>> FieldCreators = new ConcurrentDictionary<string, Func<object, MemberInfo, Field>>();
+        private readonly static ObjectStructureVisitor ObjectStructureVisitor;
 
         internal Mapping() { }
 
@@ -21,7 +22,7 @@ namespace Lucene.Orm.Documents
         {
             var mapping = new Mapping { Type = typeof(TObject) };
             
-            var objectType = typeof(TObject);
+            var structureInfo = ObjectStructureVisitor.Visit<TObject>();
 
             return mapping;
         }

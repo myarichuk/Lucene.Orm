@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Fasterflect;
 
 namespace Lucene.Orm.Documents
@@ -37,16 +36,19 @@ namespace Lucene.Orm.Documents
 
         private void Visit(MemberInfo memberInfo, Dictionary<string, MemberInfo> result, Stack<string> currentMemberPath)
         {
-            result.Add(string.Join(".", currentMemberPath.Reverse().Concat(memberInfo.Name)), memberInfo);
-
             var currentType = memberInfo.Type();
+
+            if(currentType == typeof(string) || 
+                !currentType.IsClass ||
+                typeof(IEnumerable).IsAssignableFrom(currentType))
+                    result.Add(string.Join(".", currentMemberPath.Reverse().Concat(memberInfo.Name)), memberInfo);
+
             var fields = currentType.FieldsAndProperties(Flags.InstancePublic);
             for(int i = 0; i < fields.Count; i++)
             {
-                if(currentType == typeof(string))
-                    continue;
+                var childType = fields[i].Type();
 
-                if(typeof(IEnumerable).IsAssignableFrom(currentType))
+                if(childType.IsValueType)
                     continue;
 
                 currentMemberPath.Push(memberInfo.Name);
