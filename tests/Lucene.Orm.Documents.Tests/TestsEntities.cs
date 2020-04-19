@@ -1,4 +1,6 @@
-﻿namespace Lucene.Orm.Documents.Tests
+﻿using System.Collections.Generic;
+
+namespace Lucene.Orm.Documents.Tests
 {
     //here, some members are fields and some properties, this is intentional
     public class User
@@ -23,6 +25,7 @@
     public class ContactDetails
     {
         public string[] Phones { get; set; }
+        public List<string> Emails { get; set; }
     }
 
     public class Customer

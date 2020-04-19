@@ -12,6 +12,8 @@ namespace Lucene.Orm.Documents
     public class ObjectStructureVisitor
     {
         private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, MemberInfo>> _parseCache = new ConcurrentDictionary<Type, IReadOnlyDictionary<string, MemberInfo>>();      
+        private static readonly Type TypeOfString = typeof(string);
+        private static readonly Type TypeOfEnumerable = typeof(IEnumerable);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IReadOnlyDictionary<string, MemberInfo> Visit<TObject>() =>
@@ -38,17 +40,18 @@ namespace Lucene.Orm.Documents
         {
             var currentType = memberInfo.Type();
 
-            if(currentType == typeof(string) || 
-                !currentType.IsClass ||
-                typeof(IEnumerable).IsAssignableFrom(currentType))
-                    result.Add(string.Join(".", currentMemberPath.Reverse().Concat(memberInfo.Name)), memberInfo);
+            var isCurrentTypeCollection = TypeOfEnumerable.IsAssignableFrom(currentType);
+            var isCurrentTypeString = currentType == TypeOfString;
+
+            if (isCurrentTypeString || isCurrentTypeCollection || currentType.IsValueType)
+                result.Add(string.Join(".", currentMemberPath.Reverse().Concat(memberInfo.Name)), memberInfo);
 
             var fields = currentType.FieldsAndProperties(Flags.InstancePublic);
             for(int i = 0; i < fields.Count; i++)
             {
                 var childType = fields[i].Type();
 
-                if(childType.IsValueType)
+                if(childType.IsValueType || isCurrentTypeCollection)
                     continue;
 
                 currentMemberPath.Push(memberInfo.Name);

@@ -39,13 +39,14 @@ namespace Lucene.Orm.Documents.Tests
         [Fact]
         public void Objects_with_collections_should_be_properly_parsed()
         {
-            var structureInfo = _objectStructureVisitor.Visit<Customer>();
+            var structureInfo = _objectStructureVisitor.Visit<Customer>();            
 
-            Assert.Equal(3, structureInfo.Count);
+            Assert.Equal(4, structureInfo.Count);
 
             Assert.True(structureInfo.ContainsKey($"{nameof(Customer.Name)}"));
             Assert.True(structureInfo.ContainsKey($"{nameof(Customer.ShippingAddresses)}"));
             Assert.True(structureInfo.ContainsKey($"{nameof(Customer.ContactDetails)}.{nameof(Customer.ContactDetails.Phones)}"));
+            Assert.True(structureInfo.ContainsKey($"{nameof(Customer.ContactDetails)}.{nameof(Customer.ContactDetails.Emails)}"));
         }
     }
 }
