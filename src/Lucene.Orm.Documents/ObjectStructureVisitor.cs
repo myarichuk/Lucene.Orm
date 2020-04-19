@@ -9,14 +9,20 @@ using Fasterflect;
 
 namespace Lucene.Orm.Documents
 {
-    public class ObjectStructureVisitor
+    public class TypeStructureMapper
     {
         private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, MemberInfo>> _parseCache = new ConcurrentDictionary<Type, IReadOnlyDictionary<string, MemberInfo>>();      
         private static readonly Type TypeOfString = typeof(string);
         private static readonly Type TypeOfEnumerable = typeof(IEnumerable);
 
+        private TypeStructureMapper(){ }
+
+        public readonly static Lazy<TypeStructureMapper> _instance = new Lazy<TypeStructureMapper>(() => new TypeStructureMapper());
+
+        public static TypeStructureMapper Instance => _instance.Value;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IReadOnlyDictionary<string, MemberInfo> Visit<TObject>() =>
+        public IReadOnlyDictionary<string, MemberInfo> Map<TObject>() =>
             Visit(typeof(TObject));
 
         public IReadOnlyDictionary<string, MemberInfo> Visit(Type currentType)
