@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Lucene.Orm.Documents.Extensions
 {
-    public static class BitConverterExt
+    public static class BitConverterEx
     {
         public static byte[] GetBytes(decimal dec)
         {

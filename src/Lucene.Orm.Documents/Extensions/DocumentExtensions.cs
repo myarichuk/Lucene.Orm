@@ -1,4 +1,5 @@
 ﻿using Lucene.Net.Documents;
+using Lucene.Orm.Documents.AST;
 using Lucene.Orm.Documents.Extensions;
 using System;
 
@@ -33,35 +34,27 @@ namespace Lucene.Orm.Documents
                 case TypeCode.UInt64:
                     return new Field(name, 
                         BitConverter.GetBytes(Convert.ToUInt64(@object)), 
-                        new FieldType{ IsIndexed = true, NumericType = NumericType.INT64, IsStored = Constants.DefaultStore == Field.Store.YES });
+                            new FieldType{ IsIndexed = true, NumericType = NumericType.INT64, IsStored = Constants.DefaultStore == Field.Store.YES });
                 case TypeCode.Decimal:
                     return new Field(name, 
-                        BitConverterExt.GetBytes(Convert.ToDecimal(@object)), 
-                        new FieldType{ IsIndexed = true, NumericType = NumericType.DOUBLE, IsStored = Constants.DefaultStore == Field.Store.YES });
+                        BitConverterEx.GetBytes(Convert.ToDecimal(@object)), 
+                            new FieldType{ IsIndexed = true, NumericType = NumericType.DOUBLE, IsStored = Constants.DefaultStore == Field.Store.YES });
                 case TypeCode.String:
                     return new StringField(name, Convert.ToString(@object), Constants.DefaultStore);
                 default:
-                    throw new NotSupportedException($"The type '{typeof(TObject).Name}' cannot be converted to Lucene field. This is not supposed to happen and is likely a bug.");
+                    return null;
             }
         }
 
-        //TODO: introduce overload that caches the mapping by type of TObject (mapping has no state!)
-        public static Document ToDocument<TObject>(this TObject @object, Mapping mapping)
-            where TObject : class
+        public static Document ToDocument<TObject>(this TObject @object) where TObject : class
         {
-            if (mapping is null)
-                throw new ArgumentNullException(nameof(mapping));
+            var fields = @object.ConvertToFields();
+            var document = new Document();
 
-            var doc = new Document();
+            foreach(var field in fields)
+                document.Add(field);
 
-            foreach(var fieldMapping in mapping.FieldMapping)
-            {
-                var field = fieldMapping.Value(@object);
-                if(field != null)
-                    doc.Add(field);
-            }
-
-            return doc;
+            return document;
         }
 
         public static TObject ToObject<TObject>(this Document document)
