@@ -7,6 +7,8 @@ namespace Lucene.Orm.Documents
 {
     public static class DocumentExtensions
     {
+        //TODO: add handling of LucenFieldAttribute
+        //TODO: make sure LuceneFieldAttribute has all necessary stuff for FieldType
         public static Field ToField<TObject>(this TObject @object, string name)
         {
             switch (Type.GetTypeCode(@object.GetType()))
