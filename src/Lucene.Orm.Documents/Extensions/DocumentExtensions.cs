@@ -2,11 +2,19 @@
 using Lucene.Orm.Documents.AST;
 using Lucene.Orm.Documents.Extensions;
 using System;
+using System.Runtime.Serialization;
+using Utf8Json;
+using Microsoft.IO;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
 
 namespace Lucene.Orm.Documents
 {
     public static class DocumentExtensions
     {
+        private readonly static RecyclableMemoryStreamManager MemoryStreamManager = new RecyclableMemoryStreamManager();
+
         //TODO: add handling of LucenFieldAttribute
         //TODO: make sure LuceneFieldAttribute has all necessary stuff for FieldType
         public static Field ToField<TObject>(this TObject @object, string name)
@@ -48,20 +56,68 @@ namespace Lucene.Orm.Documents
             }
         }
 
-        public static Document ToDocument<TObject>(this TObject @object) where TObject : class
+        public static Document ToDocument<TObject>(this TObject @object) 
+            where TObject : class
         {
-            var fields = @object.ConvertToFields();
-            var document = new Document();
+            using(var tempStream = MemoryStreamManager.GetStream())
+            {
+                JsonSerializer.Serialize(tempStream, @object);
+                var dynamicObject = (IDictionary<string, object>)JsonSerializer.Deserialize<dynamic>(tempStream);
 
-            foreach(var field in fields)
-                document.Add(field);
+                var document = new Document();
+                foreach(var field in ParseFields(dynamicObject, new Stack<string>()))
+                    document.Add(field);
 
-            return document;
+                return document;
+
+                IEnumerable<Field> ParseFields(IDictionary<string, object> obj, Stack<string> path)
+                {
+                    foreach(var kvp in obj)
+                    {
+                        string name = string.Join(".", path.Reverse().Concat(kvp.Key));
+                        switch(kvp.Value)
+                        {
+                            case string str:
+                                if(str != null)
+                                    yield return str.ToField(name);
+                                break;
+                            case IDictionary<string,object> dict:
+                                path.Push(name);
+                                foreach(var field in ParseFields(dict, path))
+                                    yield return field;
+                                path.Pop();
+                                break;
+                            case IEnumerable enumerable:
+                                foreach(var item in enumerable)
+                                    if(item is IDictionary<string, object> subDict)
+                                    {
+                                        path.Push(name);
+                                        foreach(var field in ParseFields(subDict, path))
+                                            yield return field;
+                                        path.Pop();
+                                    }
+                                    else 
+                                    {
+                                        if(item != null)
+                                            yield return item.ToField(name);
+                                    }
+                                break;
+                            default:
+                                if(kvp.Value != null)
+                                    yield return kvp.Value.ToField(name);
+                                break;
+                        }
+                    }
+                }
+            }
         }
 
         public static TObject ToObject<TObject>(this Document document)
             where TObject : class
         {            
+            var @object = FormatterServices.GetUninitializedObject(typeof(TObject));
+      
+            
 
             throw new NotImplementedException();
         }

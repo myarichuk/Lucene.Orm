@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xunit;
 
 namespace Lucene.Orm.Documents.Tests
 {
-    public class DocumentConversionTests
+    public class ToDocumentConversionTests
     {
         public class User
         {
