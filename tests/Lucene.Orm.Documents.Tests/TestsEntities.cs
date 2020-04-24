@@ -25,7 +25,7 @@ namespace Lucene.Orm.Documents.Tests
     public class ContactDetails
     {
         public string[] Phones { get; set; }
-        public List<string> Emails { get; set; }
+        public string[] Emails { get; set; }
     }
 
     public class Customer
